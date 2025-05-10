@@ -4,39 +4,11 @@
 #include <fstream>
 #include <iomanip>
 #include <random>
+#include <omp.h>
+#include "matrix.h"
 using namespace std;
-// Simple matrix class
-class Matrix {
-private:
-    vector<float> data;
-    size_t rows, cols;
 
-public:
-    Matrix(size_t r, size_t c) : rows(r), cols(c), data(r * c, 0.0f) {}
-    
-    float& operator()(size_t i, size_t j) {
-        return data[i * cols + j];
-    }
-    
-    const float& operator()(size_t i, size_t j) const {
-        return data[i * cols + j];
-    }
-    
-    size_t getRows() const { return rows; }
-    size_t getCols() const { return cols; }
-    
-    void randomize() {
-        random_device rd;
-        mt19937 gen(rd());
-        uniform_real_distribution<float> dis(0.0f, 1.0f);
-        
-        for (auto& val : data) {
-            val = dis(gen);
-        }
-    }
-};
-
-// Single-threaded matrix multiplication
+// OpenMP matrix multiplication
 Matrix multiply(const Matrix& A, const Matrix& B) {
     if (A.getCols() != B.getRows()) {
         throw runtime_error("Matrix dimensions mismatch");
@@ -48,6 +20,7 @@ Matrix multiply(const Matrix& A, const Matrix& B) {
     
     Matrix C(M, N);
     
+    #pragma omp parallel for
     for (size_t i = 0; i < M; ++i) {
         for (size_t j = 0; j < N; ++j) {
             float sum = 0.0f;
@@ -62,7 +35,7 @@ Matrix multiply(const Matrix& A, const Matrix& B) {
 }
 
 // Function to save performance data
-void savePerformanceData(const string& filename, size_t matrixSize, double timeMs) {
+void savePerformanceData(const string& filename, size_t matrixSize, double timeMs, int numThreads) {
     ofstream outfile(filename, ios_base::app);
     
     if (!outfile.is_open()) {
@@ -73,22 +46,29 @@ void savePerformanceData(const string& filename, size_t matrixSize, double timeM
     // Write header if file is empty
     outfile.seekp(0, ios::end);
     if (outfile.tellp() == 0) {
-        outfile << "MatrixSize,ExecutionTime_ms\n";
+        outfile << "MatrixSize,NumThreads,ExecutionTime_ms\n";
     }
     
-    outfile << matrixSize << "," << timeMs << "\n";
+    outfile << matrixSize << "," << numThreads << "," << timeMs << "\n";
     outfile.close();
 }
 
 int main(int argc, char* argv[]) {
-    // Default matrix size if not provided
+    // Default matrix size and thread count
     size_t matrixSize = 1000;
+    int numThreads = omp_get_max_threads(); // Default to max available threads
     
     if (argc > 1) {
         matrixSize = stoi(argv[1]);
     }
     
-    cout << "Running single-threaded matrix multiplication with size: " << matrixSize << "x" << matrixSize << endl;
+    if (argc > 2) {
+        numThreads = stoi(argv[2]);
+        omp_set_num_threads(numThreads);
+    }
+    
+    cout << "Running OpenMP matrix multiplication with size: " << matrixSize << "x" << matrixSize 
+              << " using " << numThreads << " threads" << endl;
     
     // Create and initialize matrices
     Matrix A(matrixSize, matrixSize);
@@ -109,7 +89,7 @@ int main(int argc, char* argv[]) {
               << timeMs << " ms" << endl;
     
     // Save results
-    savePerformanceData("single_threaded_performance.csv", matrixSize, timeMs);
+    savePerformanceData("omp_performance.csv", matrixSize, timeMs, numThreads);
     
     // Save checksum for verification
     float checksum = 0.0f;
@@ -119,8 +99,9 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    ofstream checksumFile("single_threaded_checksum.txt");
+    ofstream checksumFile("omp_checksum.txt");
     checksumFile << "Matrix size: " << matrixSize << "x" << matrixSize << endl;
+    checksumFile << "Number of threads: " << numThreads << endl;
     checksumFile << "Checksum: " << checksum << endl;
     checksumFile.close();
     
