@@ -72,7 +72,7 @@ __global__ void calcMaxDiffKernel(const float* oldGrid, const float* newGrid,
     int idx = row * width + col;
     
     // Initialize shared memory for block-wise reduction
-    __shared__ float blockMaxDiff[256]; // Assuming block size <= 256
+    __shared__ float blockMaxDiff[1024]; // Increased to handle up to 32x32 blocks
     int tid = threadIdx.y * blockDim.x + threadIdx.x;
     
     // Initialize with 0 or the difference if in bounds
@@ -243,8 +243,8 @@ int main(int argc, char* argv[]) {
     cout << "Final diff: " << maxDiff << endl;
     cout << "Time: " << fixed << setprecision(2) << milliseconds << " ms" << endl;
     
-    // Copy result back to host
-    CUDA_CHECK(cudaMemcpy(flatGrid.data(), d_oldGrid, gridBytes, cudaMemcpyHostToDevice));
+    // Copy result back to host - fixed direction flag here
+    CUDA_CHECK(cudaMemcpy(flatGrid.data(), d_oldGrid, gridBytes, cudaMemcpyDeviceToHost));
     
     // Transfer back to Grid format
     for (size_t i = 0; i < gridSize; ++i) {
