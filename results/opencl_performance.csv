@@ -1,5 +1,0 @@
-MatrixSize,KernelType,ExecutionTime_ms
-1000,optimized,6.6305
-2000,optimized,50.4001
-3000,optimized,161.096
-4000,optimized,625.767

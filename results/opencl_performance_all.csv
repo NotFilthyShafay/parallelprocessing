@@ -1,0 +1,13 @@
+MatrixSize,KernelType,WorkgroupSize,ExecutionTime_ms
+1000,naive,8,8.4773
+2000,naive,8,40.6901
+3000,naive,8,239.706
+4000,naive,8,477.523
+1000,naive,16,5.8465
+2000,naive,16,67.0288
+3000,naive,16,167.948
+4000,naive,16,804.828
+1000,naive,32,8.8026
+2000,naive,32,90.7574
+3000,naive,32,322.691
+4000,naive,32,2380.95

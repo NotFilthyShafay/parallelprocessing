@@ -1,72 +1,151 @@
-Matrix Multiplication Performance Comparison
-This project compares the performance of matrix multiplication implemented using different parallel computing techniques: single-threaded CPU, OpenMP CPU parallelization, and CUDA GPU acceleration.
-Project Overview
-Matrix multiplication is a fundamental operation in many computational applications, from scientific simulations to machine learning. This project provides implementations in:
+# Parallel Matrix Multiplication
 
-Single-threaded CPU code
-OpenMP parallel CPU code (with configurable thread count)
-CUDA GPU acceleration (with both naive and shared memory optimization)
+This project implements and compares matrix multiplication using various parallel computing approaches:
+- Single-threaded CPU implementation
+- OpenMP multi-threaded CPU implementation
+- CUDA GPU implementation (with both naive and shared memory kernels)
 
-Performance is measured across different matrix sizes to demonstrate how each approach scales.
-Requirements
-To build and run this project, you'll need:
+## Project Structure
 
-A C++ compiler with C++11 support (g++ recommended)
-OpenMP support (included in most modern C++ compilers)
-NVIDIA CUDA Toolkit (12.x or newer recommended)
-An NVIDIA GPU with compute capability 8.9 or compatible with your CUDA version
-Linux environment (WSL supported with proper GPU passthrough)
+```
+/home/shafay/Parallel/
+├── cpu/
+│   ├── matrix.h                     # Matrix class definition
+│   ├── matrix_multiplication_omp.cpp       # OpenMP implementation
+│   └── matrix_multiplication_single_threaded.cpp  # Single-threaded implementation
+├── cuda/
+│   └── matmulcuda.cu                # CUDA implementation
+├── bin/                             # Compiled binaries
+├── Makefile                         # Build system
+└── README.md                        # This file
+```
 
-Project Structure
-.
-├── bin/                 # Compiled executables
-├── cpu/                 # CPU implementations
-│   ├── matrix_multiplication_single_threaded.cpp
-│   └── matrix_multiplication_omp.cpp
-├── cuda/                # CUDA implementations
-│   └── matmulcuda.cu
-├── opencl/             # OpenCL implementation (not used in current Makefile)
-├── Makefile            # Build and run automation
-└── README.md           # This file
-Building the Project
-To build all implementations:
-bashmake
-This will compile the single-threaded, OpenMP, and CUDA versions of the matrix multiplication code.
-Running the Tests
-Running All Implementations
-To run all implementations with various matrix sizes:
-bashmake run
-Running Specific Implementations
-Run only the single-threaded version:
-bashmake run_st
-Run only the OpenMP version (with 2, 4, and 8 threads):
-bashmake run_omp
-Run only the CUDA version (with both naive and shared memory kernels):
-bashmake run_cuda
-Generating a Performance Report
-To run all tests and generate a performance comparison report:
-bashmake report
-This will create a performance_report.txt file containing performance metrics for all implementations.
-Performance Metrics
-The performance is measured in:
+## Prerequisites
 
-Execution time in milliseconds
-GFLOPS (Giga Floating Point Operations Per Second)
+- C++ compiler with C++11 support
+- OpenMP library
+- NVIDIA CUDA Toolkit
+- Matrix class implementation (`matrix.h`)
 
-The report compares how performance scales with:
+## Building the Project
 
-Matrix size (1000x1000 to 4000x4000)
-Number of threads (for OpenMP)
-Kernel optimization technique (for CUDA)
+The project includes a Makefile to simplify building all implementations:
 
-Customizing the Tests
-You can modify the SIZES variable in the Makefile to test with different matrix dimensions:
-makeSIZES = 1000 2000 3000 4000
-Cleaning Up
-To remove all compiled executables:
-bashmake clean
-Notes
+```bash
+# Build all implementations
+make all
 
-For the OpenMP version, specify the number of threads as a command-line argument
-For the CUDA version, specify the kernel type (0 for naive, 1 for shared memory) as a command-line argument
-Performance may vary significantly depending on your hardware configuration
+# Build specific implementations
+make bin/matmul_st    # Single-threaded
+make bin/matmul_omp   # OpenMP
+make bin/matmul_cuda  # CUDA
+```
+
+You can also compile manually:
+
+```bash
+# Single-threaded version
+g++ -O3 -std=c++11 -o bin/matmul_st cpu/matrix_multiplication_single_threaded.cpp
+
+# OpenMP version
+g++ -fopenmp -O3 -std=c++11 -o bin/matmul_omp cpu/matrix_multiplication_omp.cpp
+
+# CUDA version
+nvcc -O3 -arch=compute_89 -code=sm_89 -o bin/matmul_cuda cuda/matmulcuda.cu
+```
+
+## Usage
+
+### Single-threaded Matrix Multiplication
+
+```bash
+./bin/matmul_st [matrix_size]
+```
+
+Parameters:
+- `matrix_size`: Size of the square matrices (default: 1000)
+
+### OpenMP Matrix Multiplication
+
+```bash
+./bin/matmul_omp [matrix_size] [num_threads]
+```
+
+Parameters:
+- `matrix_size`: Size of the square matrices (default: 1000)
+- `num_threads`: Number of OpenMP threads to use (default: max available threads)
+
+### CUDA Matrix Multiplication
+
+```bash
+./bin/matmul_cuda [matrix_size] [kernel_type]
+```
+
+Parameters:
+- `matrix_size`: Size of the square matrices (default: 1000)
+- `kernel_type`: Type of CUDA kernel to use (0: naive, 1: shared memory, default: 1)
+
+## Running Automated Tests
+
+The Makefile includes targets to run benchmarks across different matrix sizes:
+
+```bash
+# Run all implementations with predefined matrix sizes
+make run
+
+# Run specific implementations
+make run_st    # Single-threaded
+make run_omp   # OpenMP with 2, 4, and 8 threads
+make run_cuda  # CUDA with both kernel types
+
+# Generate a performance comparison report
+make report
+```
+
+## Output Files
+
+The programs generate the following output files:
+
+1. Performance CSV files:
+   - `single_threaded_performance.csv`: Single-threaded performance metrics
+   - `omp_performance.csv`: OpenMP performance metrics
+   - `cuda_performance.csv`: CUDA performance metrics
+
+2. Checksum files for verification:
+   - `single_threaded_checksum.txt`
+   - `omp_checksum.txt`
+   - `cuda_checksum.txt`
+
+3. Performance report:
+   - `performance_report.txt`: Comparison of all implementations (generated with `make report`)
+
+## Example
+
+```bash
+# Run with 2000x2000 matrices
+./bin/matmul_st 2000          # Single-threaded
+./bin/matmul_omp 2000 4       # OpenMP with 4 threads
+./bin/matmul_cuda 2000 1      # CUDA with shared memory
+
+# Run all benchmarks and generate report
+make report
+```
+
+Expected output (OpenMP example):
+```
+Running OpenMP matrix multiplication with size: 2000x2000 using 4 threads
+Matrix multiplication completed in XXXX.XX ms
+```
+
+## Performance Analysis
+
+You can use the generated CSV files to analyze performance across different:
+- Matrix sizes
+- Number of threads (for OpenMP)
+- Kernel implementations (for CUDA)
+
+This is useful for studying:
+- Scalability
+- Parallel efficiency
+- CPU vs GPU performance
+- Effect of shared memory optimization in GPU computing
