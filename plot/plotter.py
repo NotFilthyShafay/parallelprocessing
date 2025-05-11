@@ -46,16 +46,18 @@ for kernel_type in cuda_df['KernelType'].unique():
              markersize=8, label=f'CUDA {kernel_type}')
 
 # Plot OpenCL - use best workgroup size (16)
-opencl_16_df = opencl_all_df[opencl_all_df['WorkgroupSize'] == 16]
-plt.plot(opencl_16_df['MatrixSize'], opencl_16_df['ExecutionTime_ms'], 'D-', linewidth=2, 
-         markersize=8, label='OpenCL naive (16×16)')
+for wg_size in [8, 16, 32]:
+    opencl_wg_df = opencl_all_df[opencl_all_df['WorkgroupSize'] == wg_size]
+    if not opencl_wg_df.empty:
+        plt.plot(opencl_wg_df['MatrixSize'], opencl_wg_df['ExecutionTime_ms'], 'D-', linewidth=2, 
+                markersize=8, label=f'OpenCL naive ({wg_size}×{wg_size})')
 
 plt.title('Matrix Multiplication Execution Time Comparison', fontsize=16)
 plt.xlabel('Matrix Size (N×N)', fontsize=14)
 plt.ylabel('Execution Time (ms, log scale)', fontsize=14)
 plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.yscale('log')
-plt.grid(True)
+plt.grid(False)
 plt.legend(fontsize=12)
 plt.tight_layout(rect=[0, 0.05, 1, 0.99])
 plt.savefig('../plots/execution_time_comparison.png', dpi=300)
@@ -68,25 +70,45 @@ baseline_times = {}
 for _, row in st_df.iterrows():
     baseline_times[row['MatrixSize']] = row['ExecutionTime_ms']
 
+# Display available matrix sizes for debugging
+print("Available baseline matrix sizes:", sorted(baseline_times.keys()))
+
 # Plot OpenMP speedups for each thread count
 for thread_count in sorted(omp_df['NumThreads'].unique()):
     omp_thread_df = omp_df[omp_df['NumThreads'] == thread_count]
-    speedups = [baseline_times[size] / time for size, time in zip(omp_thread_df['MatrixSize'], omp_thread_df['ExecutionTime_ms'])]
-    plt.plot(omp_thread_df['MatrixSize'], speedups, 's-', linewidth=2, 
+    # Make sure to only use matrix sizes that exist in both datasets
+    valid_sizes = [size for size in omp_thread_df['MatrixSize'] if size in baseline_times]
+    valid_times = [time for size, time in zip(omp_thread_df['MatrixSize'], omp_thread_df['ExecutionTime_ms']) 
+                  if size in baseline_times]
+    
+    speedups = [baseline_times[size] / time for size, time in zip(valid_sizes, valid_times)]
+    plt.plot(valid_sizes, speedups, 's-', linewidth=2, 
              markersize=8, label=f'OpenMP ({thread_count} threads)')
 
 # Plot CUDA speedups
 for kernel_type in cuda_df['KernelType'].unique():
     cuda_kernel_df = cuda_df[cuda_df['KernelType'] == kernel_type]
-    speedups = [baseline_times[size] / time for size, time in zip(cuda_kernel_df['MatrixSize'], cuda_kernel_df['ExecutionTime_ms'])]
-    plt.plot(cuda_kernel_df['MatrixSize'], speedups, '^-', linewidth=2, 
+    # Make sure to only use matrix sizes that exist in both datasets
+    valid_sizes = [size for size in cuda_kernel_df['MatrixSize'] if size in baseline_times]
+    valid_times = [time for size, time in zip(cuda_kernel_df['MatrixSize'], cuda_kernel_df['ExecutionTime_ms']) 
+                  if size in baseline_times]
+    
+    speedups = [baseline_times[size] / time for size, time in zip(valid_sizes, valid_times)]
+    plt.plot(valid_sizes, speedups, '^-', linewidth=2, 
              markersize=8, label=f'CUDA {kernel_type}')
 
-# Plot OpenCL speedups (best workgroup size)
-opencl_best_df = opencl_all_df[opencl_all_df['WorkgroupSize'] == 16]
-opencl_speedups = [baseline_times[size] / time for size, time in zip(opencl_best_df['MatrixSize'], opencl_best_df['ExecutionTime_ms'])]
-plt.plot(opencl_best_df['MatrixSize'], opencl_speedups, 'D-', linewidth=2, 
-         markersize=8, label='OpenCL (16×16)')
+# Plot OpenCL speedups for each workgroup size
+for wg_size in [8, 16, 32]:
+    opencl_wg_df = opencl_all_df[opencl_all_df['WorkgroupSize'] == wg_size]
+    if not opencl_wg_df.empty:
+        # Make sure to only use matrix sizes that exist in both datasets
+        valid_sizes = [size for size in opencl_wg_df['MatrixSize'] if size in baseline_times]
+        valid_times = [time for size, time in zip(opencl_wg_df['MatrixSize'], opencl_wg_df['ExecutionTime_ms']) 
+                      if size in baseline_times]
+        
+        speedups = [baseline_times[size] / time for size, time in zip(valid_sizes, valid_times)]
+        plt.plot(valid_sizes, speedups, 'D-', linewidth=2, 
+                markersize=8, label=f'OpenCL ({wg_size}×{wg_size})')
 
 # Add reference line for no speedup (1x)
 plt.axhline(y=1, color='r', linestyle='--', label='Baseline (Single-threaded CPU)')
@@ -95,7 +117,7 @@ plt.title('Speedup Relative to Single-threaded CPU Implementation', fontsize=16)
 plt.xlabel('Matrix Size (N×N)', fontsize=14)
 plt.ylabel('Speedup Factor (higher is better)', fontsize=14)
 plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
-plt.grid(True)
+plt.grid(False)
 plt.legend(fontsize=12)
 plt.tight_layout(rect=[0, 0.05, 1, 0.99])
 plt.savefig('../plots/speedup_comparison.png', dpi=300)
@@ -113,7 +135,7 @@ plt.xlabel('Number of Threads', fontsize=14)
 plt.ylabel('Execution Time (ms, log scale)', fontsize=14)
 plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.yscale('log')
-plt.grid(True)
+plt.grid(False)
 plt.legend(fontsize=12)
 plt.xticks(omp_df['NumThreads'].unique())
 plt.tight_layout(rect=[0, 0.05, 1, 0.99])
@@ -135,8 +157,11 @@ cuda_shared_times = cuda_df[cuda_df['KernelType'] == 'shared_memory']['Execution
 opencl_best_times = []
 for size in matrix_sizes:
     size_df = opencl_all_df[opencl_all_df['MatrixSize'] == size]
-    best_time = size_df['ExecutionTime_ms'].min()
-    opencl_best_times.append(best_time)
+    if not size_df.empty:
+        best_time = size_df['ExecutionTime_ms'].min()
+        opencl_best_times.append(best_time)
+    else:
+        opencl_best_times.append(0)  # Placeholder if no data
 
 # Plot the bars
 plt.bar(x - width, cuda_naive_times, width, label='CUDA naive')
@@ -149,7 +174,7 @@ plt.ylabel('Execution Time (ms)', fontsize=14)
 plt.xticks(x, matrix_sizes)
 plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.legend(fontsize=12)
-plt.grid(True, axis='y')
+plt.grid(False)
 plt.tight_layout(rect=[0, 0.05, 1, 0.99])
 plt.savefig('../plots/gpu_implementation_comparison.png', dpi=300)
 
@@ -167,7 +192,7 @@ plt.xlabel('Workgroup Size (N×N)', fontsize=14)
 plt.ylabel('Execution Time (ms, log scale)', fontsize=14)
 plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.yscale('log')
-plt.grid(True)
+plt.grid(False)
 plt.legend(fontsize=12)
 plt.xticks([8, 16, 32])
 plt.tight_layout(rect=[0, 0.05, 1, 0.99])
@@ -198,7 +223,7 @@ plt.title('Checksum Comparison (Normalized)', fontsize=16)
 plt.ylabel('Normalized Checksum Value', fontsize=14)
 plt.xticks(rotation=45, ha='right')
 plt.ylim(0.999, 1.001)  # Tight y-range to show small differences
-plt.grid(True, axis='y')
+plt.grid(False)
 plt.tight_layout()
 plt.savefig('../plots/checksum_comparison.png', dpi=300)
 
