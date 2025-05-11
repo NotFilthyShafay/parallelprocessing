@@ -1,0 +1,9 @@
+MatrixSize,KernelType,ExecutionTime_ms
+1000,naive,3.50112
+1000,shared_memory,3.71421
+2000,naive,24.0486
+2000,shared_memory,24.0403
+3000,naive,89.849
+3000,shared_memory,86.0006
+4000,naive,202.652
+4000,shared_memory,193.259

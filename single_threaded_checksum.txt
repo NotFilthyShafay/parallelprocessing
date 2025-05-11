@@ -1,0 +1,2 @@
+Matrix size: 4000x4000
+Checksum: 1.63595e+10

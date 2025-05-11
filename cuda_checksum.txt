@@ -1,0 +1,3 @@
+Matrix size: 4000x4000
+Kernel type: shared_memory
+Checksum: 1.63635e+10
