@@ -1,0 +1,3 @@
+Matrix size: 4000x4000
+Kernel type: naive
+Checksum: 1.63601e+10
