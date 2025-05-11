@@ -1,7 +1,0 @@
-Grid size: 1024x1024
-Block size: 32x32
-Iterations: 10000
-Min value: -5
-Max value: 5
-Mean value: 9.31323e-10
-Sum: 0.000976562

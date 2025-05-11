@@ -1,5 +1,0 @@
-Grid size: 1024x1024
-Min value: -5
-Max value: 5
-Mean value: 0
-Sum: 0
