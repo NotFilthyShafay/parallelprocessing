@@ -20,13 +20,6 @@ opencl_all_df = pd.read_csv(f"{results_dir}/opencl_performance_all.csv")
 # Create output directory if it doesn't exist
 os.makedirs("../plots", exist_ok=True)
 
-# Add hardware specifications to plots
-hw_info = """
-Hardware: NVIDIA GeForce RTX 4070 Laptop GPU (Ada Lovelace)
-CPU: Intel Core i7-13700H @ 2.40GHz
-RAM: 16GB DDR5
-"""
-
 # 1. Execution time comparison across implementations
 plt.figure(figsize=(14, 8))
 
@@ -55,7 +48,6 @@ for wg_size in [8, 16, 32]:
 plt.title('Matrix Multiplication Execution Time Comparison', fontsize=16)
 plt.xlabel('Matrix Size (N×N)', fontsize=14)
 plt.ylabel('Execution Time (ms, log scale)', fontsize=14)
-plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.yscale('log')
 plt.grid(False)
 plt.legend(fontsize=12)
@@ -116,7 +108,6 @@ plt.axhline(y=1, color='r', linestyle='--', label='Baseline (Single-threaded CPU
 plt.title('Speedup Relative to Single-threaded CPU Implementation', fontsize=16)
 plt.xlabel('Matrix Size (N×N)', fontsize=14)
 plt.ylabel('Speedup Factor (higher is better)', fontsize=14)
-plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.grid(False)
 plt.legend(fontsize=12)
 plt.tight_layout(rect=[0, 0.05, 1, 0.99])
@@ -133,7 +124,6 @@ for size in sorted(omp_df['MatrixSize'].unique()):
 plt.title('OpenMP Performance Scaling with Thread Count', fontsize=16)
 plt.xlabel('Number of Threads', fontsize=14)
 plt.ylabel('Execution Time (ms, log scale)', fontsize=14)
-plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.yscale('log')
 plt.grid(False)
 plt.legend(fontsize=12)
@@ -172,7 +162,6 @@ plt.title('GPU Implementation Comparison', fontsize=16)
 plt.xlabel('Matrix Size (N×N)', fontsize=14)
 plt.ylabel('Execution Time (ms)', fontsize=14)
 plt.xticks(x, matrix_sizes)
-plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.legend(fontsize=12)
 plt.grid(False)
 plt.tight_layout(rect=[0, 0.05, 1, 0.99])
@@ -190,7 +179,6 @@ for size in sorted(opencl_all_df['MatrixSize'].unique()):
 plt.title('Impact of OpenCL Workgroup Size on Performance', fontsize=16)
 plt.xlabel('Workgroup Size (N×N)', fontsize=14)
 plt.ylabel('Execution Time (ms, log scale)', fontsize=14)
-plt.figtext(0.5, 0.01, hw_info, ha='center', fontsize=10, bbox={"facecolor":"white", "alpha":0.8, "pad":5})
 plt.yscale('log')
 plt.grid(False)
 plt.legend(fontsize=12)
