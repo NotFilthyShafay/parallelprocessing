@@ -178,8 +178,7 @@ for size in sorted(opencl_all_df['MatrixSize'].unique()):
 
 plt.title('Impact of OpenCL Workgroup Size on Performance', fontsize=16)
 plt.xlabel('Workgroup Size (N×N)', fontsize=14)
-plt.ylabel('Execution Time (ms, log scale)', fontsize=14)
-plt.yscale('log')
+plt.ylabel('Execution Time (ms)', fontsize=14)
 plt.grid(False)
 plt.legend(fontsize=12)
 plt.xticks([8, 16, 32])
@@ -188,31 +187,5 @@ plt.savefig('../plots/workgroup_size_impact.png', dpi=300)
 
 # 6. Correctness verification through checksums
 plt.figure(figsize=(10, 6))
-
-# Read checksum values from the files
-checksums = {
-    'CPU Single-threaded': 1.63595e+10,  # From single_threaded_checksum.txt
-    'CPU OpenMP (8 threads)': 1.63611e+10,  # From omp_checksum.txt
-    'CUDA shared_memory': 1.63635e+10,  # From cuda_checksum.txt
-    'OpenCL naive': 1.63601e+10  # From opencl_checksum2.txt
-}
-
-# Normalize checksums relative to single-threaded
-baseline = checksums['CPU Single-threaded']
-normalized_checksums = {k: v/baseline for k, v in checksums.items()}
-
-# Plot bar chart of normalized checksums
-implementations = list(normalized_checksums.keys())
-values = list(normalized_checksums.values())
-plt.bar(implementations, values)
-plt.axhline(y=1.0, color='r', linestyle='--', label='Baseline (Single-threaded)')
-
-plt.title('Checksum Comparison (Normalized)', fontsize=16)
-plt.ylabel('Normalized Checksum Value', fontsize=14)
-plt.xticks(rotation=45, ha='right')
-plt.ylim(0.999, 1.001)  # Tight y-range to show small differences
-plt.grid(False)
-plt.tight_layout()
-plt.savefig('../plots/checksum_comparison.png', dpi=300)
 
 print("All plots have been generated and saved to the 'plots' directory.")
